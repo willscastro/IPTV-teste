@@ -1,0 +1,33 @@
+<resources>
+    <string name="app_name">Meu IPTV</string>
+    <string name="add_service_title">Adicionar serviço</string>
+    <string name="empty_state">Nenhum serviço cadastrado ainda.\nToque em + para adicionar um painel ou uma lista de canais.</string>
+    <string name="btn_add">Adicionar</string>
+    <string name="label_service_name">Nome do serviço</string>
+    <string name="label_service_type">Tipo de serviço</string>
+    <string name="type_panel">Painel (abre num navegador dentro do app)</string>
+    <string name="type_playlist">Lista de canais (M3U ou Xtream Codes)</string>
+    <string name="label_panel_url">Endereço do painel (URL)</string>
+    <string name="label_playlist_mode">Formato da lista</string>
+    <string name="playlist_mode_m3u">Link M3U</string>
+    <string name="playlist_mode_xtream">Xtream Codes</string>
+    <string name="label_m3u_url">Link da lista M3U</string>
+    <string name="label_xtream_server">Endereço do servidor</string>
+    <string name="label_xtream_user">Usuário</string>
+    <string name="label_xtream_pass">Senha</string>
+    <string name="btn_save">Salvar</string>
+    <string name="btn_cancel">Cancelar</string>
+    <string name="error_fill_fields">Preencha os campos obrigatórios.</string>
+    <string name="menu_delete">Remover</string>
+    <string name="menu_save_login">Salvar este login neste aparelho</string>
+    <string name="menu_forget_login">Esquecer login salvo</string>
+    <string name="login_saved">Login salvo neste aparelho.</string>
+    <string name="login_forgotten">Login removido deste aparelho.</string>
+    <string name="webview_error">Esta página não carregou.\n\nVerifique sua conexão ou o endereço cadastrado.</string>
+    <string name="btn_retry">Tentar de novo</string>
+    <string name="btn_open_browser">Abrir no navegador</string>
+    <string name="loading_channels">Carregando canais…</string>
+    <string name="channels_empty">Nenhum canal encontrado nesta lista.</string>
+    <string name="channels_error">Não foi possível carregar esta lista. Verifique o link ou os dados informados.</string>
+    <string name="search_channel">Buscar canal</string>
+</resources>

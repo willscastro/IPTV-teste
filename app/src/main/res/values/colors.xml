@@ -1,0 +1,12 @@
+<resources>
+    <color name="brand_green">#1DB954</color>
+    <color name="brand_green_dark">#14923F</color>
+    <color name="background_light">#F5F6FA</color>
+    <color name="background_dark">#121212</color>
+    <color name="surface_light">#FFFFFF</color>
+    <color name="surface_dark">#1E1E1E</color>
+    <color name="text_primary_light">#1A1A1A</color>
+    <color name="text_primary_dark">#F2F2F2</color>
+    <color name="text_secondary">#8A8F98</color>
+    <color name="error_red">#E5484D</color>
+</resources>
