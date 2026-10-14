@@ -42,7 +42,7 @@ jobs:
       # compilação falhar, publicamos o log também numa branch própria,
       # do mesmo jeito que o APK, pra dar pra ler com um git pull comum.
       - name: Publicar log de build (se falhar)
-        if: always()
+        if: failure()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -79,9 +79,9 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git checkout --orphan build-log
+          git checkout --orphan dist-log
           git rm -rf . > /dev/null
           cp /tmp/dist-push.log ./build.log 2>/dev/null || echo "sem log capturado" > build.log
           git add build.log
           git commit -m "build: log de falha no passo dist (commit ${GITHUB_SHA})"
-          git push origin build-log --force
+          git push origin dist-log --force
