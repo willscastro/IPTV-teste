@@ -16,6 +16,7 @@
     <string name="label_xtream_user">Usuário</string>
     <string name="label_xtream_pass">Senha</string>
     <string name="btn_save">Salvar</string>
+    <string name="btn_choose_logo">Escolher logo da galeria</string>
     <string name="btn_cancel">Cancelar</string>
     <string name="error_fill_fields">Preencha os campos obrigatórios.</string>
     <string name="menu_delete">Remover</string>

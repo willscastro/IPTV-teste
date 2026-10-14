@@ -4,6 +4,7 @@ import android.graphics.BitmapFactory
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
@@ -14,9 +15,11 @@ class ServiceAdapter(
     private val itens: MutableList<Service>,
     private val onAbrir: (Service) -> Unit,
     private val onRemover: (Service) -> Unit,
+    private val onEditarIcone: (Service) -> Unit,
 ) : RecyclerView.Adapter<ServiceAdapter.VH>() {
 
     class VH(view: View) : RecyclerView.ViewHolder(view) {
+        val avatar: FrameLayout = view.findViewById(R.id.avatarServico)
         val inicial: TextView = view.findViewById(R.id.txtInicial)
         val icone: ImageView = view.findViewById(R.id.imgIcone)
         val nome: TextView = view.findViewById(R.id.txtNome)
@@ -57,6 +60,7 @@ class ServiceAdapter(
 
         holder.itemView.setOnClickListener { onAbrir(s) }
         holder.remover.setOnClickListener { onRemover(s) }
+        holder.avatar.setOnClickListener { onEditarIcone(s) }
     }
 
     fun atualizar(novaLista: List<Service>) {

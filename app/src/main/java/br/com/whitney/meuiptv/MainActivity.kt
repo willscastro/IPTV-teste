@@ -1,11 +1,13 @@
 package br.com.whitney.meuiptv
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.TextView
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -25,6 +27,22 @@ class MainActivity : AppCompatActivity() {
     private lateinit var recycler: RecyclerView
     private lateinit var txtVazio: TextView
     private val buscandoIcone = mutableSetOf<String>()
+    private var servicoEscolhendoIcone: Service? = null
+
+    private val selecionarImagemDaGaleria =
+        registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+            val servico = servicoEscolhendoIcone
+            servicoEscolhendoIcone = null
+            if (uri != null && servico != null) {
+                FaviconFetcher.salvarIconeManual(this, servico.id, uri) { caminho ->
+                    if (caminho != null) {
+                        servico.iconFile = caminho
+                        ServiceStore.atualizar(this, servico)
+                        recarregar()
+                    }
+                }
+            }
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,6 +57,7 @@ class MainActivity : AppCompatActivity() {
             itens = mutableListOf(),
             onAbrir = { abrirServico(it) },
             onRemover = { confirmarRemocao(it) },
+            onEditarIcone = { abrirMenuDeIcone(it) },
         )
         recycler.layoutManager = LinearLayoutManager(this)
         recycler.adapter = adapter
@@ -95,6 +114,42 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             }
+    }
+
+    /** Toque no avatar do serviço: deixa a pessoa escolher a logo da galeria, ou tentar buscar de novo. */
+    private fun abrirMenuDeIcone(service: Service) {
+        val opcoes = arrayOf(
+            "Escolher da galeria",
+            "Buscar automaticamente de novo",
+            "Remover logo (usar inicial)",
+        )
+        MaterialAlertDialogBuilder(this)
+            .setTitle(service.name)
+            .setItems(opcoes) { _, index ->
+                when (index) {
+                    0 -> {
+                        servicoEscolhendoIcone = service
+                        selecionarImagemDaGaleria.launch("image/*")
+                    }
+                    1 -> {
+                        buscandoIcone.remove(service.id)
+                        buscandoIcone.add(service.id)
+                        FaviconFetcher.buscarEBaixar(this, service) { caminho ->
+                            buscandoIcone.remove(service.id)
+                            service.iconFile = caminho
+                            ServiceStore.atualizar(this, service)
+                            recarregar()
+                        }
+                    }
+                    2 -> {
+                        FaviconFetcher.remover(this, service.id)
+                        service.iconFile = null
+                        ServiceStore.atualizar(this, service)
+                        recarregar()
+                    }
+                }
+            }
+            .show()
     }
 
     private fun abrirServico(service: Service) {

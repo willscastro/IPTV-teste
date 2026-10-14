@@ -56,4 +56,7 @@ dependencies {
 
     // Serialização simples dos serviços salvos
     implementation("org.json:json:20240303")
+
+    // Leitura das tags <link rel="icon"> do HTML, para achar a logo real dos painéis
+    implementation("org.jsoup:jsoup:1.17.2")
 }
