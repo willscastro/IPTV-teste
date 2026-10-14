@@ -19,6 +19,7 @@ import android.webkit.WebViewClient
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -126,11 +127,30 @@ class PaineisActivity : AppCompatActivity() {
             val chip = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
-                setPadding((14 * dp).toInt(), (8 * dp).toInt(), (8 * dp).toInt(), (8 * dp).toInt())
+                setPadding((10 * dp).toInt(), (8 * dp).toInt(), (8 * dp).toInt(), (8 * dp).toInt())
                 background = chipBackground(ativa)
                 isClickable = true
                 isFocusable = true
                 setOnClickListener { selecionarAba(tab.serviceId) }
+            }
+
+            val arquivoIcone = PanelTabManager.arquivoIcone(this, tab)
+            val bitmapIcone = arquivoIcone?.let {
+                runCatching { android.graphics.BitmapFactory.decodeFile(it.absolutePath) }.getOrNull()
+            }
+            if (bitmapIcone != null) {
+                val icone = ImageView(this).apply {
+                    val tamanho = (18 * dp).toInt()
+                    layoutParams = LinearLayout.LayoutParams(tamanho, tamanho).apply {
+                        marginEnd = (6 * dp).toInt()
+                    }
+                    setImageDrawable(
+                        androidx.core.graphics.drawable.RoundedBitmapDrawableFactory.create(resources, bitmapIcone).apply {
+                            isCircular = true
+                        }
+                    )
+                }
+                chip.addView(icone)
             }
 
             val label = TextView(this).apply {

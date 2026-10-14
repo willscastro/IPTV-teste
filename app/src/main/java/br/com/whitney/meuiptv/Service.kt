@@ -24,6 +24,8 @@ data class Service(
     var xtreamServer: String? = null,
     var xtreamUser: String? = null,
     var xtreamPass: String? = null,
+    // Ícone do site/painel, baixado automaticamente (caminho relativo dentro de filesDir)
+    var iconFile: String? = null,
 ) {
     fun toJson(): JSONObject = JSONObject().apply {
         put("id", id)
@@ -34,6 +36,7 @@ data class Service(
         xtreamServer?.let { put("xtreamServer", it) }
         xtreamUser?.let { put("xtreamUser", it) }
         xtreamPass?.let { put("xtreamPass", it) }
+        iconFile?.let { put("iconFile", it) }
     }
 
     companion object {
@@ -46,6 +49,7 @@ data class Service(
             xtreamServer = o.optStringOrNull("xtreamServer"),
             xtreamUser = o.optStringOrNull("xtreamUser"),
             xtreamPass = o.optStringOrNull("xtreamPass"),
+            iconFile = o.optStringOrNull("iconFile"),
         )
     }
 }
@@ -87,6 +91,12 @@ object ServiceStore {
 
     fun remover(ctx: android.content.Context, id: String) {
         val atuais = listar(ctx).filterNot { it.id == id }
+        salvar(ctx, atuais)
+    }
+
+    /** Substitui um serviço já existente (mesmo id) com os dados atualizados. */
+    fun atualizar(ctx: android.content.Context, servico: Service) {
+        val atuais = listar(ctx).map { if (it.id == servico.id) servico else it }
         salvar(ctx, atuais)
     }
 }

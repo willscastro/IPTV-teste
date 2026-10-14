@@ -24,6 +24,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var adapter: ServiceAdapter
     private lateinit var recycler: RecyclerView
     private lateinit var txtVazio: TextView
+    private val buscandoIcone = mutableSetOf<String>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -73,6 +74,27 @@ class MainActivity : AppCompatActivity() {
         adapter.atualizar(lista)
         txtVazio.visibility = if (lista.isEmpty()) View.VISIBLE else View.GONE
         recycler.visibility = if (lista.isEmpty()) View.GONE else View.VISIBLE
+        buscarIconesFaltantes(lista)
+    }
+
+    /** Busca o ícone do painel em segundo plano para quem ainda não tem um salvo. */
+    private fun buscarIconesFaltantes(lista: List<Service>) {
+        lista
+            .filter {
+                it.type == ServiceType.PAINEL && it.iconFile == null && !it.panelUrl.isNullOrBlank() &&
+                    it.id !in buscandoIcone
+            }
+            .forEach { servico ->
+                buscandoIcone.add(servico.id)
+                FaviconFetcher.buscarEBaixar(this, servico) { caminho ->
+                    buscandoIcone.remove(servico.id)
+                    if (caminho != null) {
+                        servico.iconFile = caminho
+                        ServiceStore.atualizar(this, servico)
+                        recarregar()
+                    }
+                }
+            }
     }
 
     private fun abrirServico(service: Service) {
@@ -99,6 +121,7 @@ class MainActivity : AppCompatActivity() {
                 ServiceStore.remover(this, service.id)
                 PasswordVault.esquecer(this, service.id)
                 PanelTabManager.fechar(this, service.id)
+                FaviconFetcher.remover(this, service.id)
                 recarregar()
             }
             .setNegativeButton(R.string.btn_cancel, null)

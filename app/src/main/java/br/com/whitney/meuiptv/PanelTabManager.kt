@@ -22,9 +22,12 @@ import org.json.JSONObject
  * O login em si não precisa ser restaurado "na mão": os cookies da
  * WebView já são persistidos pelo próprio CookieManager do Android.
  */
+private fun JSONObject.optStringOuNull(key: String): String? =
+    if (has(key)) optString(key) else null
+
 object PanelTabManager {
 
-    data class Tab(val serviceId: String, var nome: String, var url: String)
+    data class Tab(val serviceId: String, var nome: String, var url: String, var iconFile: String? = null)
 
     private const val PREFS = "meuiptv_abas"
     private const val KEY_ORDEM = "ordem"
@@ -46,7 +49,7 @@ object PanelTabManager {
             val arr = JSONArray(raw)
             for (i in 0 until arr.length()) {
                 val o = arr.getJSONObject(i)
-                ordem.add(Tab(o.getString("id"), o.optString("nome"), o.optString("url")))
+                ordem.add(Tab(o.getString("id"), o.optString("nome"), o.optString("url"), o.optStringOuNull("iconFile")))
             }
         }
     }
@@ -61,8 +64,12 @@ object PanelTabManager {
 
     fun abrirOuFocar(ctx: Context, service: Service) {
         garantirCarregado(ctx)
-        if (ordem.none { it.serviceId == service.id }) {
-            ordem.add(Tab(service.id, service.name, service.panelUrl ?: "about:blank"))
+        val existente = ordem.find { it.serviceId == service.id }
+        if (existente == null) {
+            ordem.add(Tab(service.id, service.name, service.panelUrl ?: "about:blank", service.iconFile))
+            persistirOrdem(ctx)
+        } else if (existente.iconFile != service.iconFile) {
+            existente.iconFile = service.iconFile
             persistirOrdem(ctx)
         }
         focoAtual = service.id
@@ -82,6 +89,13 @@ object PanelTabManager {
 
     fun webViewDe(serviceId: String?): WebView? = serviceId?.let { webViews[it] }
 
+    /** Arquivo local do ícone de uma aba, se já tiver sido baixado. */
+    fun arquivoIcone(ctx: Context, tab: Tab): java.io.File? {
+        val relativo = tab.iconFile ?: return null
+        val arquivo = java.io.File(ctx.applicationContext.filesDir, relativo)
+        return if (arquivo.exists()) arquivo else null
+    }
+
     fun atualizarUrl(ctx: Context, serviceId: String, url: String) {
         ordem.find { it.serviceId == serviceId }?.url = url
         persistirOrdem(ctx)
@@ -94,6 +108,7 @@ object PanelTabManager {
                 put("id", t.serviceId)
                 put("nome", t.nome)
                 put("url", t.url)
+                t.iconFile?.let { put("iconFile", it) }
             })
         }
         prefs(ctx).edit().putString(KEY_ORDEM, arr.toString()).apply()
