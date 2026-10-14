@@ -58,6 +58,7 @@ jobs:
       # do próprio repositório Git, assim dá pra puxar com um git pull comum.
       - name: Publicar APK na branch "dist"
         run: |
+          exec > >(tee /tmp/dist-push.log) 2>&1
           set -x
           mkdir -p /tmp/dist-out
           cp app/build/outputs/apk/debug/app-debug.apk /tmp/dist-out/MeuIPTV-debug.apk
@@ -71,7 +72,7 @@ jobs:
           echo "APK gerado automaticamente pelo GitHub Actions a partir do commit ${GITHUB_SHA}." > README.md
           git add MeuIPTV-debug.apk README.md
           git commit -m "build: MeuIPTV-debug.apk (commit ${GITHUB_SHA})"
-          git push origin dist --force 2>&1 | tee /tmp/dist-push.log
+          git push origin dist --force
 
       - name: Publicar log do passo "dist" (se falhar)
         if: failure()
