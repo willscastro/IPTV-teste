@@ -30,4 +30,9 @@
     <string name="channels_empty">Nenhum canal encontrado nesta lista.</string>
     <string name="channels_error">Não foi possível carregar esta lista. Verifique o link ou os dados informados.</string>
     <string name="search_channel">Buscar canal</string>
+    <string name="janus_slogan">Cuidamos da tecnologia para que\nvocê cuide do negócio.</string>
+    <string name="splash_app_tagline">Seus próprios serviços, num só lugar.</string>
+    <string name="btn_continue">Continuar</string>
+    <string name="splash_credit">Desenvolvido por Janus</string>
+    <string name="action_toggle_theme">Alternar tema claro/escuro</string>
 </resources>

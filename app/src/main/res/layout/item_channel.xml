@@ -15,7 +15,7 @@
         android:layout_height="38dp"
         android:background="@drawable/bg_circulo_verde"
         android:gravity="center"
-        android:textColor="@android:color/white"
+        android:textColor="#0B0B0C"
         android:textSize="15sp"
         android:textStyle="bold"
         tools:text="G" />
@@ -26,7 +26,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="14dp"
         android:layout_weight="1"
-        android:textColor="@color/text_primary_light"
+        android:textColor="@color/text_primary"
         android:textSize="15sp"
         tools:text="Nome do canal" />
 </LinearLayout>

@@ -2,27 +2,33 @@
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/window_background">
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:background="@color/surface">
 
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="@color/brand_green"
+            android:background="@color/surface"
             app:navigationIcon="@android:drawable/ic_menu_close_clear_cancel"
-            app:titleTextColor="@android:color/white" />
+            app:navigationIconTint="@color/text_primary"
+            app:titleTextColor="@color/text_primary" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="10dp"
             android:hint="@string/search_channel"
-            app:boxBackgroundColor="@color/surface_light"
-            app:startIconDrawable="@android:drawable/ic_menu_search">
+            app:boxBackgroundColor="@color/window_background"
+            app:boxStrokeColor="@color/brand_gold"
+            app:hintTextColor="@color/text_secondary"
+            app:startIconDrawable="@android:drawable/ic_menu_search"
+            app:startIconTint="@color/text_muted">
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/editBusca"
                 android:layout_width="match_parent"
@@ -46,7 +52,8 @@
             android:id="@+id/progress"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center" />
+            android:layout_gravity="center"
+            android:indeterminateTint="@color/brand_gold" />
 
         <TextView
             android:id="@+id/txtEstado"

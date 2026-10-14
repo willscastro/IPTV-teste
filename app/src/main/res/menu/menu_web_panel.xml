@@ -3,6 +3,12 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
+        android:id="@+id/action_toggle_theme"
+        android:icon="@drawable/ic_moon"
+        android:title="@string/action_toggle_theme"
+        app:showAsAction="always" />
+
+    <item
         android:id="@+id/action_preencher_login"
         android:title="Preencher login salvo"
         app:showAsAction="never" />

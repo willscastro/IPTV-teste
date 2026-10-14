@@ -54,6 +54,7 @@ class WebPanelActivity : AppCompatActivity() {
         val nome = intent.getStringExtra(EXTRA_NOME).orEmpty()
 
         val toolbar = findViewById<MaterialToolbar>(R.id.toolbar)
+        setSupportActionBar(toolbar)
         toolbar.title = nome
         toolbar.setNavigationOnClickListener { finish() }
 
@@ -126,11 +127,18 @@ class WebPanelActivity : AppCompatActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_web_panel, menu)
+        val item = menu.findItem(R.id.action_toggle_theme)
+        item?.setIcon(if (ThemeHelper.estaEscuro()) R.drawable.ic_moon else R.drawable.ic_sun)
+        item?.icon?.mutate()?.setTint(resources.getColor(R.color.text_primary, theme))
         return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
+            R.id.action_toggle_theme -> {
+                ThemeHelper.alternar(this)
+                true
+            }
             R.id.action_preencher_login -> {
                 preencherLoginSalvo()
                 true

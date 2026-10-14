@@ -2,6 +2,7 @@ package br.com.whitney.meuiptv
 
 import android.os.Bundle
 import android.view.View
+import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -24,6 +25,11 @@ class AddServiceActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_service)
+
+        findViewById<ImageButton>(R.id.btnAlternarTema).apply {
+            setImageResource(if (ThemeHelper.estaEscuro()) R.drawable.ic_moon else R.drawable.ic_sun)
+            setOnClickListener { ThemeHelper.alternar(this@AddServiceActivity) }
+        }
 
         val editNome = findViewById<TextInputEditText>(R.id.editNome)
         val editPanelUrl = findViewById<TextInputEditText>(R.id.editPanelUrl)

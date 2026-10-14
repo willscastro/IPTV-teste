@@ -1,0 +1,12 @@
+<resources>
+    <color name="brand_gold">#C9A14A</color>
+    <color name="brand_gold_dark">#A9813A</color>
+    <color name="window_background">#0B0B0C</color>
+    <color name="surface">#1C1A16</color>
+    <color name="surface_soft">#3A2E12</color>
+    <color name="text_primary">#F3F4F6</color>
+    <color name="text_secondary">#9398A6</color>
+    <color name="text_muted">#686D7A</color>
+    <color name="border">#2E2A22</color>
+    <color name="error_red">#E5484D</color>
+</resources>

@@ -6,15 +6,18 @@
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:background="@color/surface"
+        app:elevation="0dp">
 
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="@color/brand_green"
+            android:background="@color/surface"
             app:navigationIcon="@android:drawable/ic_menu_close_clear_cancel"
-            app:titleTextColor="@android:color/white" />
+            app:navigationIconTint="@color/text_primary"
+            app:titleTextColor="@color/text_primary" />
     </com.google.android.material.appbar.AppBarLayout>
 
     <FrameLayout
@@ -34,13 +37,15 @@
             android:layout_height="wrap_content"
             android:layout_gravity="top"
             android:indeterminate="true"
+            android:indeterminateTint="@color/brand_gold"
+            android:progressTint="@color/brand_gold"
             android:visibility="gone" />
 
         <LinearLayout
             android:id="@+id/painelErro"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@color/background_light"
+            android:background="@color/window_background"
             android:gravity="center"
             android:orientation="vertical"
             android:padding="32dp"
@@ -60,7 +65,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
-                android:backgroundTint="@color/brand_green"
+                android:backgroundTint="@color/brand_gold"
+                android:textColor="@color/window_background"
+                app:cornerRadius="16dp"
                 android:text="@string/btn_retry" />
 
             <com.google.android.material.button.MaterialButton
@@ -69,6 +76,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
+                android:textColor="@color/text_secondary"
                 android:text="@string/btn_open_browser" />
         </LinearLayout>
     </FrameLayout>

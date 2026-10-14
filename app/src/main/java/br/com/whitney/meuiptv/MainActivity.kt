@@ -2,6 +2,8 @@ package br.com.whitney.meuiptv
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -9,6 +11,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.android.material.appbar.MaterialToolbar
 
 /**
  * Tela inicial: lista os serviços que a PRÓPRIA pessoa cadastrou neste
@@ -25,6 +28,8 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        setSupportActionBar(findViewById<MaterialToolbar>(R.id.toolbar))
 
         recycler = findViewById(R.id.recyclerServicos)
         txtVazio = findViewById(R.id.txtVazio)
@@ -45,6 +50,22 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         recarregar()
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.menu_main, menu)
+        val item = menu.findItem(R.id.action_toggle_theme)
+        item?.setIcon(if (ThemeHelper.estaEscuro()) R.drawable.ic_moon else R.drawable.ic_sun)
+        item?.icon?.mutate()?.setTint(resources.getColor(R.color.text_primary, theme))
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == R.id.action_toggle_theme) {
+            ThemeHelper.alternar(this)
+            return true
+        }
+        return super.onOptionsItemSelected(item)
     }
 
     private fun recarregar() {
