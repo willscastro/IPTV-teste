@@ -35,4 +35,6 @@
     <string name="btn_continue">Continuar</string>
     <string name="splash_credit">Desenvolvido por Janus</string>
     <string name="action_toggle_theme">Alternar tema claro/escuro</string>
+    <string name="paineis_title">Painéis abertos</string>
+    <string name="paineis_vazio">Nenhum painel aberto no momento.\nVolte ao Início e toque num serviço para abrir.</string>
 </resources>

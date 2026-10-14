@@ -33,7 +33,8 @@ MeuIPTV/
 │       ├── java/br/com/whitney/meuiptv/
 │       │   ├── MainActivity.kt           # tela inicial com os serviços salvos
 │       │   ├── AddServiceActivity.kt     # cadastro de painel / lista M3U / Xtream
-│       │   ├── WebPanelActivity.kt       # WebView em tela cheia para painéis
+│       │   ├── PaineisActivity.kt        # abas de painéis (WebViews vivas em segundo plano)
+│       │   ├── PanelTabManager.kt        # mantém as WebViews dos painéis abertos
 │       │   ├── ChannelListActivity.kt    # lista de canais de uma playlist
 │       │   ├── PlayerActivity.kt         # player (Media3/ExoPlayer)
 │       │   ├── Service.kt                # modelo + armazenamento local dos serviços

@@ -78,10 +78,9 @@ class MainActivity : AppCompatActivity() {
     private fun abrirServico(service: Service) {
         when (service.type) {
             ServiceType.PAINEL -> {
-                val i = Intent(this, WebPanelActivity::class.java)
-                i.putExtra(WebPanelActivity.EXTRA_SERVICE_ID, service.id)
-                i.putExtra(WebPanelActivity.EXTRA_URL, service.panelUrl)
-                i.putExtra(WebPanelActivity.EXTRA_NOME, service.name)
+                PanelTabManager.abrirOuFocar(this, service)
+                val i = Intent(this, PaineisActivity::class.java)
+                i.putExtra(PaineisActivity.EXTRA_FOCUS_SERVICE_ID, service.id)
                 startActivity(i)
             }
             ServiceType.M3U, ServiceType.XTREAM -> {
@@ -99,6 +98,7 @@ class MainActivity : AppCompatActivity() {
             .setPositiveButton("Remover") { _, _ ->
                 ServiceStore.remover(this, service.id)
                 PasswordVault.esquecer(this, service.id)
+                PanelTabManager.fechar(this, service.id)
                 recarregar()
             }
             .setNegativeButton(R.string.btn_cancel, null)

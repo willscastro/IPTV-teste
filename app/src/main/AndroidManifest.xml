@@ -35,7 +35,7 @@
             android:label="@string/add_service_title" />
 
         <activity
-            android:name=".WebPanelActivity"
+            android:name=".PaineisActivity"
             android:exported="false"
             android:configChanges="orientation|screenSize|keyboardHidden|uiMode" />
 
