@@ -35,7 +35,23 @@ jobs:
           gradle-version: '8.9'
 
       - name: Compilar APK (debug)
-        run: gradle assembleDebug --no-daemon --stacktrace
+        run: gradle assembleDebug --no-daemon --stacktrace 2>&1 | tee /tmp/build.log
+
+      # Download de logs de execução passa por blob storage, que pode estar
+      # bloqueado para quem está depurando remotamente — então, se a
+      # compilação falhar, publicamos o log também numa branch própria,
+      # do mesmo jeito que o APK, pra dar pra ler com um git pull comum.
+      - name: Publicar log de build (se falhar)
+        if: failure()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout --orphan build-log
+          git rm -rf . > /dev/null
+          cp /tmp/build.log ./build.log
+          git add build.log
+          git commit -m "build: log de falha (commit ${GITHUB_SHA})"
+          git push origin build-log --force
 
       # Em vez de "upload-artifact" (que fica em blob storage só acessível
       # pelo navegador/gh CLI local), publicamos o APK direto numa branch
