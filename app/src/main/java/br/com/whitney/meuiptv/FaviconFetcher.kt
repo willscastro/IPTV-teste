@@ -116,6 +116,7 @@ object FaviconFetcher {
                 val candidatos = runCatching {
                     val doc = Jsoup.parse(html, baseUrl)
                     doc.select("link[rel]")
+                        .toList()
                         .filter { it.attr("rel").lowercase().contains("icon") }
                         .sortedByDescending { el ->
                             val rel = el.attr("rel").lowercase()
