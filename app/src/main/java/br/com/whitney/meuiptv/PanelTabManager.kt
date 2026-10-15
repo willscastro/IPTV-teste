@@ -154,10 +154,21 @@ object PanelTabManager {
             prefs(ctx).edit().putString(chaveEstado(serviceId), b64).apply()
         }
         webView.url?.let { atualizarUrl(ctx, serviceId, it) }
+        persistirCookies()
     }
 
     fun salvarTodos(ctx: Context) {
         webViews.keys.toList().forEach { salvarEstado(ctx, it) }
+    }
+
+    /**
+     * Força o Android a gravar os cookies (login) em disco agora, em vez de
+     * esperar o próprio WebView decidir quando. Sem isso, se o sistema matar
+     * o app rápido depois do login, o cookie pode nunca ter sido salvo de
+     * verdade e a pessoa precisa logar de novo ao reabrir.
+     */
+    fun persistirCookies() {
+        runCatching { CookieManager.getInstance().flush() }
     }
 
     private fun restaurarEstado(ctx: Context, serviceId: String, webView: WebView): Boolean {

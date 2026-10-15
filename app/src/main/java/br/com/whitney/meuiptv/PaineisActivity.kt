@@ -47,6 +47,10 @@ class PaineisActivity : AppCompatActivity() {
 
     private var abaAtivaId: String? = null
 
+    // Evita tentar o auto-login de novo a cada navegação dentro do mesmo painel,
+    // já logado - só tenta uma vez por aba, por abertura desta tela.
+    private val autoLoginTentado = mutableSetOf<String>()
+
     companion object {
         const val EXTRA_FOCUS_SERVICE_ID = "focus_service_id"
     }
@@ -84,6 +88,13 @@ class PaineisActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         redesenharTudo()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        // onPause é chamado de forma bem mais confiável que onStop antes do
+        // sistema matar o app, então é aqui que garantimos o login salvo de verdade.
+        PanelTabManager.salvarTodos(this)
     }
 
     override fun onStop() {
@@ -272,6 +283,7 @@ class PaineisActivity : AppCompatActivity() {
                     txtPainelUrl.text = url
                 }
                 PanelTabManager.salvarEstado(this@PaineisActivity, serviceId)
+                tentarAutoLoginSeNecessario(serviceId)
             }
 
             override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {
@@ -335,6 +347,39 @@ class PaineisActivity : AppCompatActivity() {
         }
     }
 
+    /** Tenta logar automaticamente com o login salvo, uma vez por aba, se a página pedir senha. */
+    private fun tentarAutoLoginSeNecessario(serviceId: String) {
+        if (!autoLoginTentado.add(serviceId)) return
+        val login = PasswordVault.carregar(this, serviceId) ?: return
+        val webView = PanelTabManager.webViewDe(serviceId) ?: return
+        val (usuario, senha) = login
+        val js = """
+            (function() {
+                var campoSenha = document.querySelector('input[type=password]');
+                if (!campoSenha || campoSenha.value) return; // não é tela de login, ou já tem algo preenchido
+                function preencher(el, valor) {
+                    if (!el) return;
+                    el.focus();
+                    el.value = valor;
+                    el.dispatchEvent(new Event('input', { bubbles: true }));
+                    el.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+                var campoUsuario = document.querySelector('input[type=email], input[type=text][name*=user i], input[type=text][name*=login i], input[name*=user i]');
+                preencher(campoUsuario, ${org.json.JSONObject.quote(usuario)});
+                preencher(campoSenha, ${org.json.JSONObject.quote(senha)});
+                var formulario = campoSenha.closest('form');
+                if (formulario) {
+                    if (typeof formulario.requestSubmit === 'function') formulario.requestSubmit();
+                    else formulario.submit();
+                } else {
+                    var botao = document.querySelector('button[type=submit], input[type=submit]');
+                    if (botao) botao.click();
+                }
+            })();
+        """.trimIndent()
+        webView.evaluateJavascript(js, null)
+    }
+
     private fun preencherLoginSalvo() {
         val id = abaAtivaId ?: return
         val login = PasswordVault.carregar(this, id)
@@ -385,6 +430,7 @@ class PaineisActivity : AppCompatActivity() {
                 val senha = editSenha.text.toString()
                 if (usuario.isNotEmpty() && senha.isNotEmpty()) {
                     PasswordVault.salvar(this, id, usuario, senha)
+                    autoLoginTentado.remove(id)
                     Toast.makeText(this, R.string.login_saved, Toast.LENGTH_SHORT).show()
                 }
             }
