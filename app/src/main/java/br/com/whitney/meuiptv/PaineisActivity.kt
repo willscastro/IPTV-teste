@@ -12,6 +12,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import android.webkit.JavascriptInterface
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
@@ -50,6 +51,13 @@ class PaineisActivity : AppCompatActivity() {
     // Evita tentar o auto-login de novo a cada navegação dentro do mesmo painel,
     // já logado - só tenta uma vez por aba, por abertura desta tela.
     private val autoLoginTentado = mutableSetOf<String>()
+
+    // Abas cujo WebView já recebeu a ponte JS que escuta o envio do formulário de login.
+    private val capturaInstalada = mutableSetOf<String>()
+
+    // Login que a própria pessoa acabou de digitar e enviar na página, aguardando
+    // a próxima página carregar pra perguntar se quer salvar pra próxima vez.
+    private val loginCapturadoPendente = mutableMapOf<String, Pair<String, String>>()
 
     companion object {
         const val EXTRA_FOCUS_SERVICE_ID = "focus_service_id"
@@ -244,6 +252,9 @@ class PaineisActivity : AppCompatActivity() {
     private fun fecharAba(serviceId: String) {
         val eraAtiva = serviceId == abaAtivaId
         PanelTabManager.fechar(this, serviceId)
+        autoLoginTentado.remove(serviceId)
+        capturaInstalada.remove(serviceId)
+        loginCapturadoPendente.remove(serviceId)
         if (eraAtiva) {
             abaAtivaId = PanelTabManager.abas(this).firstOrNull()?.serviceId
             PanelTabManager.focoAtual = abaAtivaId
@@ -283,7 +294,10 @@ class PaineisActivity : AppCompatActivity() {
                     txtPainelUrl.text = url
                 }
                 PanelTabManager.salvarEstado(this@PaineisActivity, serviceId)
+                garantirInterfaceCaptura(serviceId)
+                instalarCapturaDeLogin(serviceId)
                 tentarAutoLoginSeNecessario(serviceId)
+                if (serviceId == abaAtivaId) oferecerSalvarLoginSeTiverPendente(serviceId)
             }
 
             override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {
@@ -345,6 +359,65 @@ class PaineisActivity : AppCompatActivity() {
             }
             else -> super.onOptionsItemSelected(item)
         }
+    }
+
+    /** Objeto exposto ao JavaScript da página, pra saber quando a pessoa envia um login na mão. */
+    private inner class CapturaLogin(private val serviceId: String) {
+        @JavascriptInterface
+        fun capturar(usuario: String, senha: String) {
+            if (usuario.isBlank() || senha.isBlank()) return
+            runOnUiThread {
+                val salvo = PasswordVault.carregar(this@PaineisActivity, serviceId)
+                if (salvo != null && salvo.first == usuario && salvo.second == senha) return@runOnUiThread
+                loginCapturadoPendente[serviceId] = usuario to senha
+            }
+        }
+    }
+
+    /** Liga a ponte JS → Android nessa aba, uma única vez por WebView. */
+    private fun garantirInterfaceCaptura(serviceId: String) {
+        if (!capturaInstalada.add(serviceId)) return
+        val webView = PanelTabManager.webViewDe(serviceId) ?: return
+        webView.addJavascriptInterface(CapturaLogin(serviceId), "AndroidLoginCapture")
+    }
+
+    /** Escuta o "enviar" do formulário de login da página, pra saber o que a pessoa digitou. */
+    private fun instalarCapturaDeLogin(serviceId: String) {
+        val webView = PanelTabManager.webViewDe(serviceId) ?: return
+        val js = """
+            (function() {
+                var campoSenha = document.querySelector('input[type=password]');
+                if (!campoSenha) return;
+                var formulario = campoSenha.closest('form');
+                if (!formulario || formulario.dataset.meuiptvCaptura) return;
+                formulario.dataset.meuiptvCaptura = '1';
+                formulario.addEventListener('submit', function() {
+                    var campoUsuario = document.querySelector('input[type=email], input[type=text][name*=user i], input[type=text][name*=login i], input[name*=user i]');
+                    var usuario = campoUsuario ? campoUsuario.value : '';
+                    var senha = campoSenha.value;
+                    if (window.AndroidLoginCapture && usuario && senha) {
+                        window.AndroidLoginCapture.capturar(usuario, senha);
+                    }
+                }, true);
+            })();
+        """.trimIndent()
+        webView.evaluateJavascript(js, null)
+    }
+
+    /** Se a pessoa acabou de logar na mão (e ainda não tínhamos esse login salvo), pergunta se quer salvar. */
+    private fun oferecerSalvarLoginSeTiverPendente(serviceId: String) {
+        val (usuario, senha) = loginCapturadoPendente.remove(serviceId) ?: return
+        val nomeAba = PanelTabManager.abas(this).find { it.serviceId == serviceId }?.nome ?: "este painel"
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.offer_save_login_title)
+            .setMessage(getString(R.string.offer_save_login_message, nomeAba))
+            .setPositiveButton(R.string.btn_save) { _, _ ->
+                PasswordVault.salvar(this, serviceId, usuario, senha)
+                autoLoginTentado.remove(serviceId)
+                Toast.makeText(this, R.string.login_saved, Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton(R.string.btn_not_now, null)
+            .show()
     }
 
     /** Tenta logar automaticamente com o login salvo, uma vez por aba, se a página pedir senha. */

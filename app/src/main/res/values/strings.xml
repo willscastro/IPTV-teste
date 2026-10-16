@@ -24,6 +24,9 @@
     <string name="menu_forget_login">Esquecer login salvo</string>
     <string name="login_saved">Login salvo neste aparelho.</string>
     <string name="login_forgotten">Login removido deste aparelho.</string>
+    <string name="offer_save_login_title">Salvar login?</string>
+    <string name="offer_save_login_message">Quer que o app preencha e entre sozinho em \"%s\" da próxima vez, sem precisar digitar de novo?</string>
+    <string name="btn_not_now">Agora não</string>
     <string name="webview_error">Esta página não carregou.\n\nVerifique sua conexão ou o endereço cadastrado.</string>
     <string name="btn_retry">Tentar de novo</string>
     <string name="btn_open_browser">Abrir no navegador</string>
