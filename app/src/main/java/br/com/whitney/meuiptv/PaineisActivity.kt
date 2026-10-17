@@ -420,6 +420,52 @@ class PaineisActivity : AppCompatActivity() {
             .show()
     }
 
+    /**
+     * JS compartilhado pelos preenchimentos de login: acha o campo de usuário (com um
+     * leque bem maior de pistas - nome, autocomplete, placeholder - e, no limite, "é o
+     * único campo de texto desse formulário") e preenche usando o setter nativo do
+     * input. Isso é necessário porque em sites feitos com React/Vue/Angular, um simples
+     * "el.value = texto" não atualiza o estado interno do framework: o campo parece
+     * preenchido por um instante e, ao confirmar, o site manda o valor antigo (vazio)
+     * mesmo - a "pisca a tela e não vai" que o site lookdefense.top apresentava.
+     */
+    private fun jsAcharEPreencherCampos(usuario: String, senha: String): String = """
+        var campoSenha = document.querySelector('input[type=password]');
+        if (!campoSenha) return null;
+
+        function valorNativo(el, valor) {
+            var proto = window.HTMLInputElement.prototype;
+            var descritor = Object.getOwnPropertyDescriptor(proto, 'value');
+            if (descritor && descritor.set) {
+                descritor.set.call(el, valor);
+            } else {
+                el.value = valor;
+            }
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        function preencher(el, valor) {
+            if (!el) return;
+            el.focus();
+            valorNativo(el, valor);
+            el.blur();
+        }
+
+        var seletorUsuario = 'input[type=email], input[autocomplete="username" i], input[autocomplete="email" i], '
+            + 'input[type=text][name*=user i], input[type=text][name*=login i], input[type=text][name*=email i], input[name*=user i], '
+            + 'input[type=text][placeholder*=usu i], input[type=text][placeholder*=user i], input[type=text][placeholder*=email i], input[type=text][placeholder*=login i]';
+        var campoUsuario = document.querySelector(seletorUsuario);
+        if (!campoUsuario) {
+            var formularioBusca = campoSenha.closest('form') || document;
+            var candidatos = formularioBusca.querySelectorAll('input[type=text], input[type=email], input:not([type])');
+            if (candidatos.length === 1) campoUsuario = candidatos[0];
+        }
+
+        preencher(campoUsuario, ${org.json.JSONObject.quote(usuario)});
+        preencher(campoSenha, ${org.json.JSONObject.quote(senha)});
+        return campoSenha;
+    """.trimIndent()
+
     /** Tenta logar automaticamente com o login salvo, uma vez por aba, se a página pedir senha. */
     private fun tentarAutoLoginSeNecessario(serviceId: String) {
         if (!autoLoginTentado.add(serviceId)) return
@@ -428,18 +474,9 @@ class PaineisActivity : AppCompatActivity() {
         val (usuario, senha) = login
         val js = """
             (function() {
-                var campoSenha = document.querySelector('input[type=password]');
-                if (!campoSenha || campoSenha.value) return; // não é tela de login, ou já tem algo preenchido
-                function preencher(el, valor) {
-                    if (!el) return;
-                    el.focus();
-                    el.value = valor;
-                    el.dispatchEvent(new Event('input', { bubbles: true }));
-                    el.dispatchEvent(new Event('change', { bubbles: true }));
-                }
-                var campoUsuario = document.querySelector('input[type=email], input[type=text][name*=user i], input[type=text][name*=login i], input[name*=user i]');
-                preencher(campoUsuario, ${org.json.JSONObject.quote(usuario)});
-                preencher(campoSenha, ${org.json.JSONObject.quote(senha)});
+                var campoSenhaAntes = document.querySelector('input[type=password]');
+                if (!campoSenhaAntes || campoSenhaAntes.value) return; // não é tela de login, ou já tem algo preenchido
+                ${jsAcharEPreencherCampos(usuario, senha)}
                 var formulario = campoSenha.closest('form');
                 if (formulario) {
                     if (typeof formulario.requestSubmit === 'function') formulario.requestSubmit();
@@ -464,17 +501,7 @@ class PaineisActivity : AppCompatActivity() {
         val webView = PanelTabManager.webViewDe(id) ?: return
         val js = """
             (function() {
-                function preencher(el, valor) {
-                    if (!el) return;
-                    el.focus();
-                    el.value = valor;
-                    el.dispatchEvent(new Event('input', { bubbles: true }));
-                    el.dispatchEvent(new Event('change', { bubbles: true }));
-                }
-                var campoUsuario = document.querySelector('input[type=email], input[type=text][name*=user i], input[type=text][name*=login i], input[name*=user i]');
-                var campoSenha = document.querySelector('input[type=password]');
-                preencher(campoUsuario, ${org.json.JSONObject.quote(usuario)});
-                preencher(campoSenha, ${org.json.JSONObject.quote(senha)});
+                ${jsAcharEPreencherCampos(usuario, senha)}
             })();
         """.trimIndent()
         webView.evaluateJavascript(js, null)
