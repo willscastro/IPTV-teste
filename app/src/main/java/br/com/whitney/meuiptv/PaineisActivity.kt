@@ -55,9 +55,9 @@ class PaineisActivity : AppCompatActivity() {
     // Abas cujo WebView já recebeu a ponte JS que escuta o envio do formulário de login.
     private val capturaInstalada = mutableSetOf<String>()
 
-    // Login que a própria pessoa acabou de digitar e enviar na página, aguardando
-    // a próxima página carregar pra perguntar se quer salvar pra próxima vez.
-    private val loginCapturadoPendente = mutableMapOf<String, Pair<String, String>>()
+    // Evita abrir o diálogo de "salvar login?" mais de uma vez ao mesmo tempo pra mesma aba
+    // (sites de página única costumam disparar clique + Enter + submit pro mesmo envio).
+    private val dialogoLoginAberto = mutableSetOf<String>()
 
     companion object {
         const val EXTRA_FOCUS_SERVICE_ID = "focus_service_id"
@@ -254,7 +254,7 @@ class PaineisActivity : AppCompatActivity() {
         PanelTabManager.fechar(this, serviceId)
         autoLoginTentado.remove(serviceId)
         capturaInstalada.remove(serviceId)
-        loginCapturadoPendente.remove(serviceId)
+        dialogoLoginAberto.remove(serviceId)
         if (eraAtiva) {
             abaAtivaId = PanelTabManager.abas(this).firstOrNull()?.serviceId
             PanelTabManager.focoAtual = abaAtivaId
@@ -297,7 +297,6 @@ class PaineisActivity : AppCompatActivity() {
                 garantirInterfaceCaptura(serviceId)
                 instalarCapturaDeLogin(serviceId)
                 tentarAutoLoginSeNecessario(serviceId)
-                if (serviceId == abaAtivaId) oferecerSalvarLoginSeTiverPendente(serviceId)
             }
 
             override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {
@@ -369,7 +368,8 @@ class PaineisActivity : AppCompatActivity() {
             runOnUiThread {
                 val salvo = PasswordVault.carregar(this@PaineisActivity, serviceId)
                 if (salvo != null && salvo.first == usuario && salvo.second == senha) return@runOnUiThread
-                loginCapturadoPendente[serviceId] = usuario to senha
+                if (!dialogoLoginAberto.add(serviceId)) return@runOnUiThread
+                mostrarOfertaSalvarLogin(serviceId, usuario, senha)
             }
         }
     }
@@ -381,22 +381,49 @@ class PaineisActivity : AppCompatActivity() {
         webView.addJavascriptInterface(CapturaLogin(serviceId), "AndroidLoginCapture")
     }
 
-    /** Escuta o "enviar" do formulário de login da página, pra saber o que a pessoa digitou. */
+    /**
+     * Escuta a pessoa enviando o login na página, de três jeitos diferentes - porque muito
+     * site (React, Vue etc.) não usa um <form> de verdade com "submit": o botão "Entrar" é
+     * só um onClick que chama a API direto, sem navegação nenhuma. Por isso não dá pra
+     * confiar só no evento "submit" nem em esperar a página recarregar: escuta também
+     * clique em qualquer botão/link enquanto a senha está preenchida, e a tecla Enter.
+     */
     private fun instalarCapturaDeLogin(serviceId: String) {
         val webView = PanelTabManager.webViewDe(serviceId) ?: return
         val js = """
             (function() {
-                var campoSenha = document.querySelector('input[type=password]');
-                if (!campoSenha) return;
-                var formulario = campoSenha.closest('form');
-                if (!formulario || formulario.dataset.meuiptvCaptura) return;
-                formulario.dataset.meuiptvCaptura = '1';
-                formulario.addEventListener('submit', function() {
-                    var campoUsuario = document.querySelector('input[type=email], input[type=text][name*=user i], input[type=text][name*=login i], input[name*=user i]');
+                var seletorUsuario = 'input[type=email], input[autocomplete="username" i], input[autocomplete="email" i], '
+                    + 'input[type=text][name*=user i], input[type=text][name*=login i], input[type=text][name*=email i], input[name*=user i], '
+                    + 'input[type=text][placeholder*=usu i], input[type=text][placeholder*=user i], input[type=text][placeholder*=email i], input[type=text][placeholder*=login i]';
+
+                function capturarEEnviar() {
+                    var campoSenha = document.querySelector('input[type=password]');
+                    if (!campoSenha || !campoSenha.value) return;
+                    var campoUsuario = document.querySelector(seletorUsuario);
+                    if (!campoUsuario) {
+                        var formularioBusca = campoSenha.closest('form') || document;
+                        var candidatos = formularioBusca.querySelectorAll('input[type=text], input[type=email], input:not([type])');
+                        if (candidatos.length === 1) campoUsuario = candidatos[0];
+                    }
                     var usuario = campoUsuario ? campoUsuario.value : '';
                     var senha = campoSenha.value;
                     if (window.AndroidLoginCapture && usuario && senha) {
                         window.AndroidLoginCapture.capturar(usuario, senha);
+                    }
+                }
+
+                if (window.meuiptvCapturaLigada) return;
+                window.meuiptvCapturaLigada = true;
+
+                document.addEventListener('submit', capturarEEnviar, true);
+                document.addEventListener('click', function(ev) {
+                    if (ev.target && ev.target.closest && ev.target.closest('button, input[type=submit], input[type=button], [role=button], a')) {
+                        capturarEEnviar();
+                    }
+                }, true);
+                document.addEventListener('keydown', function(ev) {
+                    if (ev.key === 'Enter' && ev.target && ev.target.type === 'password') {
+                        capturarEEnviar();
                     }
                 }, true);
             })();
@@ -404,9 +431,8 @@ class PaineisActivity : AppCompatActivity() {
         webView.evaluateJavascript(js, null)
     }
 
-    /** Se a pessoa acabou de logar na mão (e ainda não tínhamos esse login salvo), pergunta se quer salvar. */
-    private fun oferecerSalvarLoginSeTiverPendente(serviceId: String) {
-        val (usuario, senha) = loginCapturadoPendente.remove(serviceId) ?: return
+    /** Pergunta se quer salvar o login que a pessoa acabou de digitar e enviar na página. */
+    private fun mostrarOfertaSalvarLogin(serviceId: String, usuario: String, senha: String) {
         val nomeAba = PanelTabManager.abas(this).find { it.serviceId == serviceId }?.nome ?: "este painel"
         MaterialAlertDialogBuilder(this)
             .setTitle(R.string.offer_save_login_title)
@@ -417,6 +443,7 @@ class PaineisActivity : AppCompatActivity() {
                 Toast.makeText(this, R.string.login_saved, Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton(R.string.btn_not_now, null)
+            .setOnDismissListener { dialogoLoginAberto.remove(serviceId) }
             .show()
     }
 
